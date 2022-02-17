@@ -391,3 +391,14 @@ pub struct CalculatedClip {
     /// The rect of the clip
     pub clip: bevy_sprite::Rect,
 }
+
+/// The border radius of the node
+#[derive(Component, Default, Copy, Clone, Debug, Reflect)]
+#[reflect(Component)]
+pub struct BorderRadius(pub f32);
+
+impl From<f32> for BorderRadius {
+    fn from(value: f32) -> Self {
+        Self(value)
+    }
+}
