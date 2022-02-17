@@ -34,7 +34,7 @@ use bevy_window::Windows;
 
 use bytemuck::{Pod, Zeroable};
 
-use crate::{CalculatedClip, Node, UiColor, UiImage};
+use crate::{BorderRadius, CalculatedClip, Node, UiColor, UiImage};
 
 pub mod node {
     pub const UI_PASS_DRIVER: &str = "ui_pass_driver";
@@ -128,6 +128,7 @@ pub struct ExtractedUiNode {
     pub image: Handle<Image>,
     pub atlas_size: Option<Vec2>,
     pub clip: Option<Rect>,
+    pub border_radius: f32,
 }
 
 #[derive(Default)]
@@ -145,11 +146,12 @@ pub fn extract_uinodes(
         &UiImage,
         &Visibility,
         Option<&CalculatedClip>,
+        &BorderRadius,
     )>,
 ) {
     let mut extracted_uinodes = render_world.get_resource_mut::<ExtractedUiNodes>().unwrap();
     extracted_uinodes.uinodes.clear();
-    for (uinode, transform, color, image, visibility, clip) in uinode_query.iter() {
+    for (uinode, transform, color, image, visibility, clip, border_radius) in uinode_query.iter() {
         if !visibility.is_visible {
             continue;
         }
@@ -168,6 +170,7 @@ pub fn extract_uinodes(
             image,
             atlas_size: None,
             clip: clip.map(|clip| clip.clip),
+            border_radius: border_radius.0,
         });
     }
 }
@@ -230,6 +233,7 @@ pub fn extract_text_uinodes(
                     image: texture,
                     atlas_size,
                     clip: clip.map(|clip| clip.clip),
+                    border_radius: 0.0,
                 });
             }
         }
@@ -242,6 +246,8 @@ struct UiVertex {
     pub position: [f32; 3],
     pub uv: [f32; 2],
     pub color: u32,
+    pub center: [f32; 2],
+    pub border_radius: f32,
 }
 
 pub struct UiMeta {
@@ -385,6 +391,11 @@ pub fn prepare_uinodes(
                 position: positions_clipped[i].into(),
                 uv: uvs[i].into(),
                 color,
+                center: [
+                    (positions_clipped[0].x + positions_clipped[2].x) * 0.5,
+                    (positions_clipped[0].y + positions_clipped[2].y) * 0.5,
+                ],
+                border_radius: extracted_uinode.border_radius,
             });
         }
 
