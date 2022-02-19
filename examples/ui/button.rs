@@ -11,6 +11,7 @@ fn main() {
 }
 
 const NORMAL_BUTTON: Color = Color::rgb(0.15, 0.15, 0.15);
+//const NORMAL_BUTTON: Color = Color::rgba(0.15, 0.15, 0.15, 0.0);
 const HOVERED_BUTTON: Color = Color::rgb(0.25, 0.25, 0.25);
 const PRESSED_BUTTON: Color = Color::rgb(0.35, 0.75, 0.35);
 
@@ -56,7 +57,11 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
                 ..Default::default()
             },
             color: NORMAL_BUTTON.into(),
-            border_radius: (5.0).into(),
+            border_radius: BorderRadius::all(5.0),
+            border: Border {
+                color: Color::BLACK,
+                width: 0.0,
+            },
             ..Default::default()
         })
         .with_children(|parent| {
