@@ -2,7 +2,7 @@
 
 use crate::{
     widget::{Button, ImageMode},
-    CalculatedSize, FocusPolicy, Interaction, Node, Style, UiColor, UiImage, CAMERA_UI, BorderRadius,
+    CalculatedSize, FocusPolicy, Interaction, Node, Style, UiColor, UiImage, CAMERA_UI, BorderRadius, Border,
 };
 use bevy_ecs::bundle::Bundle;
 use bevy_render::{
@@ -115,6 +115,8 @@ pub struct ButtonBundle {
     pub visibility: Visibility,
     /// Describes the border radius of that button
     pub border_radius: BorderRadius,
+    /// Describes the visual properties of the button's border
+    pub border: Border,
 }
 
 impl Default for ButtonBundle {
@@ -131,6 +133,7 @@ impl Default for ButtonBundle {
             global_transform: Default::default(),
             visibility: Default::default(),
             border_radius: Default::default(),
+            border: Default::default(),
         }
     }
 }
