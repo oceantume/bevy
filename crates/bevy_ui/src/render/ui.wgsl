@@ -11,11 +11,12 @@ struct UiUniformEntry {
     center: vec2<f32>;
     border_color: u32;
     border_width: f32;
-    corner_radius: array<f32, 4u>;
+    corner_radius: vec4<f32>;
 };
 
 struct UiUniform {
-    entries: array<UiUniformEntry, 10u>;
+    // NOTE: this array size must be kept in sync with the constants defined bevy_ui/src/render/mod.rs
+    entries: array<UiUniformEntry, 256u>;
 };
 
 [[group(2), binding(0)]]

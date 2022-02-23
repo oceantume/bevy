@@ -12,7 +12,7 @@ use bevy_app::prelude::*;
 use bevy_asset::{load_internal_asset, AssetEvent, Assets, Handle, HandleUntyped};
 use bevy_core::FloatOrd;
 use bevy_ecs::prelude::*;
-use bevy_math::{const_vec3, Mat4, Vec2, Vec3, Vec3Swizzles, Vec4Swizzles};
+use bevy_math::{const_vec3, Mat4, Vec2, Vec3, Vec3Swizzles, Vec4, Vec4Swizzles};
 use bevy_reflect::TypeUuid;
 use bevy_render::{
     camera::ActiveCameras,
@@ -255,8 +255,7 @@ struct UiVertex {
     pub uniform_index: u32,
 }
 
-// TODO: Tweak this value.
-const MAX_UI_UNIFORM_ENTRIES: usize = 10;
+const MAX_UI_UNIFORM_ENTRIES: usize = 256;
 
 #[repr(C)]
 #[derive(Copy, Clone, AsStd140, Debug)]
@@ -272,7 +271,8 @@ pub struct UiUniformEntry {
     pub center: Vec2,
     pub border_color: u32,
     pub border_width: f32,
-    pub corner_radius: [f32; 4],
+    /// NOTE: This is a Vec4 because using [f32; 4] with AsStd140 results in a 16-bytes alignment.
+    pub corner_radius: Vec4,
 }
 
 pub struct UiMeta {
@@ -438,7 +438,9 @@ pub fn prepare_uinodes(
             center: ((positions[0] + positions[2]) / 2.0).xy(),
             border_color: extracted_uinode.border_color.map_or(0, encode_color_as_u32),
             border_width: extracted_uinode.border_width.unwrap_or(0.0),
-            corner_radius: extracted_uinode.corner_radius.unwrap_or([0.0; 4]),
+            corner_radius: extracted_uinode
+                .corner_radius
+                .map_or(Vec4::default(), |c| c.into()),
         };
 
         for i in QUAD_INDICES {
