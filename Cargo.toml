@@ -520,6 +520,10 @@ name = "text_debug"
 path = "examples/ui/text_debug.rs"
 
 [[example]]
+name = "text_input"
+path = "examples/ui/text_input.rs"
+
+[[example]]
 name = "ui"
 path = "examples/ui/ui.rs"
 

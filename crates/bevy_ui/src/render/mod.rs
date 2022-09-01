@@ -20,12 +20,12 @@ use bevy_render::{
     render_phase::{sort_phase_system, AddRenderCommand, DrawFunctions, RenderPhase},
     render_resource::*,
     renderer::{RenderDevice, RenderQueue},
-    texture::Image,
+    texture::{Image, DEFAULT_IMAGE_HANDLE},
     view::{ViewUniforms, Visibility},
     RenderApp, RenderStage, RenderWorld,
 };
 use bevy_sprite::{Rect, SpriteAssetEvents, TextureAtlas};
-use bevy_text::{DefaultTextPipeline, Text};
+use bevy_text::{DefaultTextPipeline, Text, TextCaret, TextSelection};
 use bevy_transform::components::GlobalTransform;
 use bevy_utils::HashMap;
 use bevy_window::{WindowId, Windows};
@@ -175,13 +175,16 @@ pub fn extract_text_uinodes(
         &Text,
         &Visibility,
         Option<&CalculatedClip>,
+        Option<&TextCaret>,
+        Option<&TextSelection>,
     )>,
 ) {
     let mut extracted_uinodes = render_world.resource_mut::<ExtractedUiNodes>();
 
     let scale_factor = windows.scale_factor(WindowId::primary()) as f32;
 
-    for (entity, uinode, transform, text, visibility, clip) in uinode_query.iter() {
+    for (entity, uinode, transform, text, visibility, clip, caret, selection) in uinode_query.iter()
+    {
         if !visibility.is_visible {
             continue;
         }
@@ -193,8 +196,9 @@ pub fn extract_text_uinodes(
             let text_glyphs = &text_layout.glyphs;
             let alignment_offset = (uinode.size / -2.0).extend(0.0);
 
-            for text_glyph in text_glyphs {
+            for (text_glyph_index, text_glyph) in text_glyphs.iter().enumerate() {
                 let color = text.sections[text_glyph.section_index].style.color;
+                let font_size = text.sections[text_glyph.section_index].style.font_size;
                 let atlas = texture_atlases
                     .get(text_glyph.atlas_info.texture_atlas.clone_weak())
                     .unwrap();
@@ -202,6 +206,13 @@ pub fn extract_text_uinodes(
                 let index = text_glyph.atlas_info.glyph_index as usize;
                 let rect = atlas.textures[index];
                 let atlas_size = Some(atlas.size);
+
+                //println!("{:?}", uinode.size);
+
+                let transform2 =
+                    Mat4::from_rotation_translation(transform.rotation, transform.translation)
+                        * Mat4::from_scale(transform.scale / scale_factor)
+                        * Mat4::from_translation(Vec3::new(text_glyph.position.x, 0.0, 0.0));
 
                 let transform =
                     Mat4::from_rotation_translation(transform.rotation, transform.translation)
@@ -218,6 +229,40 @@ pub fn extract_text_uinodes(
                     atlas_size,
                     clip: clip.map(|clip| clip.clip),
                 });
+
+                if let Some(selection) = selection {
+                    if selection.range.contains(&text_glyph_index) {
+                        
+                    }
+                }
+
+                if let Some(caret) = caret {
+                    // todo: handle being at the end as well.
+
+                    let line_offset = (text_glyph.position / font_size);
+
+                    // this is good for x, but not y. i think we can't get the "center" back for y and we need to get it from original transform instead.
+                    let transform = Mat4::from_translation(Vec3::new(
+                        rect.width() / -2.0,
+                        rect.height() / 2.0,
+                        0.0,
+                    )) * transform;
+                    //let transform = Mat4::from_translation(Vec3::new(rect.width() / -2.0, 0.0, 0.0)) * transform2;
+                    if text_glyph_index == caret.position {
+                        extracted_uinodes.uinodes.push(ExtractedUiNode {
+                            transform,
+                            color: Color::rgba(0.3, 0.3, 1.0, 0.5),
+                            //rect,
+                            rect: Rect {
+                                min: Vec2::new(0.0, 0.0),
+                                max: Vec2::new(2.0, font_size),
+                            },
+                            image: DEFAULT_IMAGE_HANDLE.typed(),
+                            atlas_size: None,
+                            clip: clip.map(|clip| clip.clip),
+                        })
+                    }
+                }
             }
         }
     }

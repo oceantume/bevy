@@ -114,6 +114,7 @@ impl GlyphBrush {
                 let x = bounds.min.x + size.x / 2.0 - min_x;
                 let y = max_y - bounds.max.y + size.y / 2.0;
                 let position = adjust.position(Vec2::new(x, y));
+                println!("{x}, {y} - {:?}", bounds);
 
                 positioned_glyphs.push(PositionedGlyph {
                     position,

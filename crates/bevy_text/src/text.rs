@@ -1,3 +1,5 @@
+use std::ops::Range;
+
 use bevy_asset::Handle;
 use bevy_ecs::{prelude::Component, reflect::ReflectComponent};
 use bevy_math::Size;
@@ -155,4 +157,16 @@ impl Default for TextStyle {
 #[reflect(Component)]
 pub struct Text2dSize {
     pub size: Size,
+}
+
+#[derive(Component, Debug, Default, Clone, Reflect)]
+#[reflect(Component)]
+pub struct TextCaret {
+    pub position: usize
+}
+
+#[derive(Component, Debug, Default, Clone, Reflect)]
+#[reflect(Component)]
+pub struct TextSelection {
+    pub range: Range<usize>
 }
