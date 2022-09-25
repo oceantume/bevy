@@ -6,6 +6,7 @@ mod flex;
 mod focus;
 mod geometry;
 mod render;
+mod text_input;
 mod ui_node;
 
 pub mod entity;
@@ -17,12 +18,15 @@ pub use flex::*;
 pub use focus::*;
 pub use geometry::*;
 pub use render::*;
+pub use text_input::*;
 pub use ui_node::*;
 
 #[doc(hidden)]
 pub mod prelude {
     #[doc(hidden)]
-    pub use crate::{entity::*, geometry::*, ui_node::*, widget::Button, Interaction, UiScale};
+    pub use crate::{
+        entity::*, geometry::*, ui_node::*, widget::Button, Interaction, TextInput, UiScale,
+    };
 }
 
 use bevy_app::prelude::*;
@@ -33,6 +37,7 @@ use bevy_ecs::{
 use bevy_input::InputSystem;
 use bevy_transform::TransformSystem;
 use bevy_window::ModifiesWindows;
+use text_input::update_text_input;
 use update::{ui_z_system, update_clipping_system};
 
 use crate::prelude::UiCameraConfig;
@@ -126,6 +131,10 @@ impl Plugin for UiPlugin {
             .add_system_to_stage(
                 CoreStage::PostUpdate,
                 update_clipping_system.after(TransformSystem::TransformPropagate),
+            )
+            .add_system_to_stage(
+                CoreStage::PostUpdate,
+                update_text_input.after(update_clipping_system),
             );
 
         crate::render::build_ui_render(app);

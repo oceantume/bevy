@@ -1433,6 +1433,16 @@ category = "UI (User Interface)"
 wasm = true
 
 [[example]]
+name = "text_input"
+path = "examples/ui/text_input.rs"
+
+[package.metadata.example.text_input]
+name = "Text Input"
+description = "Illustrates the use of text_input"
+category = "UI (User Interface)"
+wasm = true
+
+[[example]]
 name = "transparency_ui"
 path = "examples/ui/transparency_ui.rs"
 
