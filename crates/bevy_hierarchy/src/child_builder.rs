@@ -1,5 +1,5 @@
 use crate::{
-    prelude::{Children, Parent},
+    prelude::{Children, Parent, Root},
     HierarchyEvent,
 };
 use bevy_ecs::{
@@ -19,7 +19,61 @@ fn push_events(world: &mut World, events: SmallVec<[HierarchyEvent; 8]>) {
     }
 }
 
+fn get_root(world: &World, parent: Entity) -> Entity {
+    world
+        .entity(parent)
+        .get::<Root>()
+        .map(|root| root.0)
+        .unwrap_or(parent)
+}
+
+// TODO: make this a smarter fn. I think it should check for parent root, and it doesn't exist, it should
+// add it to parent as well (it may mean parent wasn't a hierarchy before). It should also probably also
+// allow removing root?
+// If the parent's root is itself, and it has no more children, should we just remove the Root here?
+// Maybe it'll be simpler to make two different fns here.
+fn update_root(world: &mut World, parent: Entity, child: Entity) {
+    let root = get_root(world, parent);
+
+    /*let root_entity = get_root(world, parent);
+    let mut child = world.entity_mut(child);
+    if let Some(mut root) = child.get_mut::<Root>() {
+        // don't trigger change detection if it didn't change.
+        if root.0 != root_entity {
+            root.0 = root_entity;
+        }
+    } else {
+        child.insert(Root(root_entity));
+    }*/
+}
+
+/// Updates the [`Root`] component recursively in the given entity's tree.
+/// Update and recursion will stop as soon as an entity's [`Root`] already
+/// has the right root set to prevent needless recursion.
+fn update_root_recursively(world: &mut World, root_entity: Entity, entity: Entity) {
+    let mut entity = world.entity_mut(entity);
+    if let Some(mut root) = entity.get_mut::<Root>() {
+        if root.0 == root_entity {
+            // stop recursion for this tree.
+            return;
+        }
+        root.0 = root_entity;
+    } else {
+        // component doesn't exist yet and should be added.
+        entity.insert(Root(root_entity));
+    }
+
+    if let Some(children) = entity.get::<Children>() {
+        for child in children.0.clone() {
+            update_root_recursively(world, root_entity, child);
+        }
+    }
+}
+
 fn push_child_unchecked(world: &mut World, parent: Entity, child: Entity) {
+    let parent_root = get_root(world, parent);
+    update_root_recursively(world, parent_root, child);
+
     let mut parent = world.entity_mut(parent);
     if let Some(mut children) = parent.get_mut::<Children>() {
         children.0.push(child);
@@ -29,6 +83,9 @@ fn push_child_unchecked(world: &mut World, parent: Entity, child: Entity) {
 }
 
 fn update_parent(world: &mut World, child: Entity, new_parent: Entity) -> Option<Entity> {
+    let parent_root = get_root(world, new_parent);
+    update_root_recursively(world, parent_root, child);
+
     let mut child = world.entity_mut(child);
     if let Some(mut parent) = child.get_mut::<Parent>() {
         let previous = parent.0;
@@ -45,6 +102,7 @@ fn remove_from_children(world: &mut World, parent: Entity, child: Entity) {
     if let Some(mut children) = parent.get_mut::<Children>() {
         children.0.retain(|x| *x != child);
         if children.is_empty() {
+            // TODO: the parent should have its Root removed if it's itself and it has no more children after this.
             parent.remove::<Children>();
         }
     }

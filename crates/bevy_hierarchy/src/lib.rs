@@ -24,7 +24,7 @@ pub mod prelude {
 
 use bevy_app::prelude::*;
 
-/// The base plugin for handling [`Parent`] and [`Children`] components
+/// The base plugin for handling [`Parent`], [`Children`] and [`Root`] components
 #[derive(Default)]
 pub struct HierarchyPlugin;
 
@@ -32,6 +32,7 @@ impl Plugin for HierarchyPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Children>()
             .register_type::<Parent>()
+            .register_type::<Root>()
             .add_event::<HierarchyEvent>();
     }
 }
